@@ -4,6 +4,7 @@ import { UsuarioLoginDTO } from './dtos/UsuarioLoginDTO';
 import { UsuarioCadastroDTO } from './dtos/UsuarioCadastroDTO';
 import { UsuarioAlteracaoDTO } from './dtos/UsuarioAlteracaoDTO';
 import { UsuarioFiltroDTO } from './dtos/UsuarioFiltroDTO';
+import { HttpStatusCode } from '../../enums/HttpStatusCode';
 
 export class UsuarioController {
   constructor(
@@ -16,7 +17,7 @@ export class UsuarioController {
 
       const result = await this.usuarioService.login(usuario);
 
-      res.status(200).json(result);
+      res.status(HttpStatusCode.OK).json(result);
     } catch (err) {
       next(err);
     }
@@ -28,7 +29,7 @@ export class UsuarioController {
 
       const result = await this.usuarioService.listar(usuarioFiltroDTO, req.user);
 
-      res.status(200).json(result);
+      res.status(HttpStatusCode.OK).json(result);
     } catch (err) {
       next(err);
     }
@@ -40,7 +41,7 @@ export class UsuarioController {
 
       const result = await this.usuarioService.buscarPorId(id, req.user);
 
-      res.status(200).json(result);
+      res.status(HttpStatusCode.OK).json(result);
     } catch (err) {
       next(err);
     }
@@ -52,7 +53,7 @@ export class UsuarioController {
 
       const result = await this.usuarioService.cadastrar(usuario, req.user);
 
-      res.status(200).json(result);
+      res.status(HttpStatusCode.CREATED).json(result);
     } catch (err) {
       next(err);
     }
@@ -66,7 +67,7 @@ export class UsuarioController {
 
       const result = await this.usuarioService.alterar(usuario, req.user);
 
-      res.status(200).json(result);
+      res.status(HttpStatusCode.OK).json(result);
     } catch (err) {
       next(err);
     }
@@ -78,7 +79,7 @@ export class UsuarioController {
 
       const result = await this.usuarioService.inativar(id, req.user);
 
-      res.status(200).json(result);
+      res.status(HttpStatusCode.OK).json(result);
     } catch (err) {
       next(err);
     }

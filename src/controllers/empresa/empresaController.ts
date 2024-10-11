@@ -15,7 +15,7 @@ export class EmpresaController {
 
       const result = await this.empresaService.buscarPorId(empresaId);
 
-      res.status(200).json(result);
+      res.status(HttpStatusCode.OK).json(result);
     } catch (err) {
       next(err);
     }
@@ -27,7 +27,7 @@ export class EmpresaController {
 
       const result = await this.empresaService.cadastrar(empresa);
 
-      res.status(HttpStatusCode.OK).json(result);
+      res.status(HttpStatusCode.CREATED).json(result);
     } catch (err) {
       next(err);
     }
