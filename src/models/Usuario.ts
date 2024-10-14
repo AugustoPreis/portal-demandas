@@ -31,4 +31,8 @@ export class Usuario {
   @ManyToOne(() => Empresa)
   @JoinColumn({ name: 'empresa_id' })
   empresa: Empresa;
+
+  constructor(id?: number) {
+    this.id = id;
+  }
 }
