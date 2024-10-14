@@ -4,7 +4,7 @@ import { empresa } from '../../../middlewares/empresa';
 import { routes as usuarioRoutes } from '../../usuario/routes/routes';
 import { routes as demandaRoutes } from '../../demanda/routes/routes';
 
-const apiRoutes = Router();
+const apiRoutes = Router({ mergeParams: true });
 
 apiRoutes.use('/:empresaId', empresa);
 

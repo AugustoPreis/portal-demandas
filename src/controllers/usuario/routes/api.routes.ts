@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { usuarioController } from '..';
 import { isAdmin } from '../../../middlewares/isAdmin';
 
-const apiRoutes = Router();
+const apiRoutes = Router({ mergeParams: true });
 
 apiRoutes.get('/', (req, res, next) => {
   usuarioController.listar(req, res, next);
