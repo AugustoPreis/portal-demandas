@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { isAdmin } from '../../../middlewares/isAdmin';
 import { demandaController } from '..';
 import { routes as historicoDemandaRoutes } from '../../historicoDemanda/routes/routes';
+import { historicoDemandaController } from '../../historicoDemanda';
 
 const apiRoutes = Router({ mergeParams: true });
 
@@ -11,6 +12,10 @@ apiRoutes.get('/', (req, res, next) => {
 
 apiRoutes.get('/:demandaId', (req, res, next) => {
   demandaController.buscarPorId(req, res, next);
+});
+
+apiRoutes.get('/:demandaId/status', (req, res, next) => {
+  historicoDemandaController.statusAtual(req, res, next);
 });
 
 apiRoutes.post('/', isAdmin, (req, res, next) => {
