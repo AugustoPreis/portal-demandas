@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 't
 import { Demanda } from './Demanda';
 import { Usuario } from './Usuario';
 import { Empresa } from './Empresa';
+import { DemandaStatus } from '../enums/DemandaStatus';
 
 @Entity({ name: 'historico_demanda' })
 export class HistoricoDemanda {
@@ -16,8 +17,8 @@ export class HistoricoDemanda {
   @Column({ name: 'observacao' })
   observacao: string;
 
-  @Column({ name: 'status' })
-  status: string;
+  @Column({ name: 'status', type: 'varchar' })
+  status: DemandaStatus;
 
   @Column({ name: 'data_cadastro' })
   dataCadastro: Date;
