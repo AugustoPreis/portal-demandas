@@ -1,8 +1,9 @@
 import { Router } from 'express';
 import { isAdmin } from '../../../middlewares/isAdmin';
 import { demandaController } from '..';
+import { routes as historicoDemandaRoutes } from '../../historicoDemanda/routes/routes';
 
-const apiRoutes = Router();
+const apiRoutes = Router({ mergeParams: true });
 
 apiRoutes.get('/', (req, res, next) => {
   demandaController.listar(req, res, next);
@@ -23,5 +24,7 @@ apiRoutes.put('/:demandaId', isAdmin, (req, res, next) => {
 apiRoutes.put('/:demandaId/inativar', isAdmin, (req, res, next) => {
   demandaController.inativar(req, res, next);
 });
+
+apiRoutes.use('/:demandaId/historico', historicoDemandaRoutes);
 
 export { apiRoutes };

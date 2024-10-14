@@ -1,9 +1,11 @@
+import { QueryRunner } from 'typeorm';
 import { DemandaAlteracaoDTO } from '../controllers/demanda/dtos/DemandaAlteracaoDTO';
 import { DemandaCadastroDTO } from '../controllers/demanda/dtos/DemandaCadastroDTO';
 import { DemandaFiltroDTO } from '../controllers/demanda/dtos/DemandaFiltroDTO';
 import { DemandaListagemRetornoDTO } from '../controllers/demanda/dtos/DemandaListagemRetornoDTO';
 import { DemandaRetornoDTO } from '../controllers/demanda/dtos/DemandaRetornoDTO';
 import { UsuarioLogadoDTO } from '../controllers/usuario/dtos/UsuarioLogadoDTO';
+import { commit, getQueryRunner, rollback } from '../database';
 import { DemandaStatus } from '../enums/DemandaStatus';
 import { HttpStatusCode } from '../enums/HttpStatusCode';
 import { Demanda } from '../models/Demanda';
@@ -11,6 +13,8 @@ import { Empresa } from '../models/Empresa';
 import { DemandaRepository } from '../repositories/demandaRepository';
 import { RequestError } from '../utils/RequestError';
 import { isString, isValidNumber, isValidString } from '../utils/validators';
+import { historicoDemandaService } from '../controllers/historicoDemanda';
+import { HistoricoDemandaSalvarDTO } from '../controllers/historicoDemanda/dtos/HistoricoDemandaSalvarDTO';
 
 export class DemandaService {
   constructor(
@@ -56,12 +60,12 @@ export class DemandaService {
     return { data: demandasRetornoDTO, total };
   }
 
-  async buscarPorId(id: number, usuarioLogado: UsuarioLogadoDTO): Promise<DemandaRetornoDTO> {
+  async buscarPorId(id: number, usuarioLogado: UsuarioLogadoDTO, qr?: QueryRunner): Promise<DemandaRetornoDTO> {
     if (!isValidNumber(id)) {
       throw new RequestError(HttpStatusCode.BAD_REQUEST, 'ID inválido');
     }
 
-    const demandaModel = await this.demandaRepository.buscarPorId(id);
+    const demandaModel = await this.demandaRepository.buscarPorId(id, qr);
 
     if (!demandaModel) {
       throw new RequestError(HttpStatusCode.NOT_FOUND, 'Demanda não encontrada');
@@ -91,27 +95,47 @@ export class DemandaService {
       throw new RequestError(HttpStatusCode.BAD_REQUEST, 'ID do usuário inválido');
     }
 
-    const demandaModel = new Demanda();
+    let qr: QueryRunner;
 
-    demandaModel.titulo = titulo.trim();
-    demandaModel.numero = await this.demandaRepository.buscarProximoNumero(usuarioLogado.empresa.id);
-    demandaModel.dataCadastro = new Date();
-    demandaModel.empresa = new Empresa(usuarioLogado.empresa.id);
+    try {
+      qr = await getQueryRunner();
 
-    if (isValidString(descricao)) {
-      demandaModel.descricao = descricao.trim();
+      const demandaModel = new Demanda();
+
+      demandaModel.titulo = titulo.trim();
+      demandaModel.numero = await this.demandaRepository.buscarProximoNumero(usuarioLogado.empresa.id);
+      demandaModel.dataCadastro = new Date();
+      demandaModel.empresa = new Empresa(usuarioLogado.empresa.id);
+
+      if (isValidString(descricao)) {
+        demandaModel.descricao = descricao.trim();
+      }
+
+      const demandaSalva = await this.demandaRepository.salvar(demandaModel, qr);
+
+      const historicoDemandaSalvarDTO: HistoricoDemandaSalvarDTO = {};
+
+      historicoDemandaSalvarDTO.demandaId = demandaSalva.id;
+      historicoDemandaSalvarDTO.status = DemandaStatus.ABERTA;
+      historicoDemandaSalvarDTO.usuarioDestinoId = usuarioId;
+
+      const historicoDemandaRetornoDTO = await historicoDemandaService.cadastrar(historicoDemandaSalvarDTO, usuarioLogado, qr);
+
+      const demandaRetornoDTO: DemandaRetornoDTO = {};
+
+      demandaRetornoDTO.numero = demandaSalva.numero;
+      demandaRetornoDTO.ano = demandaSalva.dataCadastro.getFullYear();
+      demandaRetornoDTO.status = historicoDemandaRetornoDTO.status;
+      demandaRetornoDTO.dataCadastro = demandaSalva.dataCadastro;
+
+      await commit(qr);
+
+      return demandaRetornoDTO;
+    } catch (err) {
+      await rollback(qr);
+
+      throw err;
     }
-
-    const demandaSalva = await this.demandaRepository.salvar(demandaModel);
-
-    const demandaRetornoDTO: DemandaRetornoDTO = {};
-
-    demandaRetornoDTO.numero = demandaSalva.numero;
-    demandaRetornoDTO.ano = demandaSalva.dataCadastro.getFullYear();
-    demandaRetornoDTO.status = DemandaStatus.ABERTA;
-    demandaRetornoDTO.dataCadastro = demandaSalva.dataCadastro;
-
-    return demandaRetornoDTO;
   }
 
   async alterar(demandaAlteracaoDTO: DemandaAlteracaoDTO, usuarioLogado: UsuarioLogadoDTO): Promise<DemandaRetornoDTO> {
